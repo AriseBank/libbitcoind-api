@@ -1,0 +1,6 @@
+*.pyc
+*.conf
+*.lprof
+*.log
+*.log.swp
+__pycache__
