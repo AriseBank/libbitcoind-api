@@ -5,8 +5,6 @@
 # https://github.com/azeteki/libbitcoind-api
 #==============================================================================
 
-import config
-
 def ParseArguments():
     """ Parse the command-line arguments passed from the shell. """
     import argparse
@@ -26,11 +24,15 @@ if __name__ == '__main__':
     url = cfg.GetRPCURL()
 
     import rpc
-    api = rpc.BitcoinRPCHandle(url)
+    handle = rpc.BitcoinRPCHandle(url)
 
-    print("===")
-    print("libbitcoind-api test")
-    print("===")
+    import state
+    state = state.State(handle)
 
-    getinfo = api.Request('getinfo')
-    print(getinfo)
+    print("=== libbitcoind-api test ===\n")
+
+    import time
+    while 1:
+        getinfo = state.Get('getinfo')
+        print(getinfo)
+        time.sleep(1)
