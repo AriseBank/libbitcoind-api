@@ -14,9 +14,10 @@ class BitcoinRPCHandle:
 
     def Request(self, request, *args):
         """ Send an RPC request and return its' output. """
+        import time
         try:
             response = getattr(self.handle, request)(*args)
-            return response
+            return (int(time.time()), response)
         except Exception:
             raise ConnectionError("Failed to perform API request \'%s\'"
                                     % request)

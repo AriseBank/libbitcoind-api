@@ -31,8 +31,15 @@ if __name__ == '__main__':
 
     print("=== libbitcoind-api test ===\n")
 
+    state.Get('getnettotals')
+    state.Get('getmempoolinfo')
+    state.Get('getblockcount')
+    state.Get('getbestblockhash')
+
     import time
     while 1:
-        getinfo = state.Get('getinfo')
-        print(getinfo)
-        time.sleep(1)
+        state.Update()
+        for key in state.Keys():
+            print(key, state.Get(key))
+        print()
+        time.sleep(2)
