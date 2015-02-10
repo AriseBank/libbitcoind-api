@@ -16,7 +16,7 @@ def ParseArguments():
 
     return parser.parse_args()
 
-if __name__ == '__main__':
+def InitializeState():
     args = ParseArguments()
 
     import config
@@ -27,19 +27,10 @@ if __name__ == '__main__':
     handle = rpc.BitcoinRPCHandle(url)
 
     import state
-    state = state.State(handle)
+    return state.State(handle)
 
-    print("=== libbitcoind-api test ===\n")
+if __name__ == '__main__':
+    state = InitializeState()
 
-    watchlist = ['getblockchaininfo', 'getmempoolinfo', 'getmininginfo',
-                    'getnetworkinfo', 'getnettotals', 'getconnectioncount',
-                    'getwalletinfo']
-    state.BatchGet(watchlist)
-
-    import time
-    while 1:
-        state.Update(False)
-        for key in state.Keys():
-            print(key, state.Get(key))
-        print()
-        time.sleep(1)
+    import debug
+    debug.Debug(state)

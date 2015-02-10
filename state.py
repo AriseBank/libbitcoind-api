@@ -1,42 +1,67 @@
 #!/usr/bin/env python
 
-DATA_TIMEOUT = 10
+import time
 
-def HasExpired(item):
-    import time
-    if (time.time() - item[0]) > DATA_TIMEOUT:
-        return True
-
-    return False
+DATA_TIMEOUT = 5
 
 class State():
     def Keys(self):
-        return self.keys.keys()
+        return self._RawKeys()
 
-    def Get(self, key, timeout=True):
-        """ Get the data item associated with 'key'.
+    def Get(self, key):
+        """ Return the data item associated with 'key'.
 
-        If timeout=True, query the RPC server for an updated item. """
+        If the item has expired, query the RPC server asynchronously
+        and return the old item (if available). """
 
-        if not (key in self.keys) or (timeout and HasExpired(self.keys[key])):
-            self.keys[key] = self.handle.Request(key)
+        self.Update(key)
+        return self._RawGet(key)
 
-        return self.keys[key]
+    def Expired(self, key, timeout=DATA_TIMEOUT):
+        """ Return true if item older than timeout, or item does not exist. """
+        item = self._RawGet(key)
+        if item and (time.time() - item[0]) < timeout:
+            return False
+        return True
 
-    def BatchGet(self, keys, timeout=True):
-        """ Batch get of multiple keys with State.Get(). """
+    def Sync(self):
+        """ Incorporate responses from the queue into the current state. """
+        while True:
+            response = self.handle.GetResponse()
+            if not response:
+                break
+            (key, payload) = response
+            self._RawPut(key, payload)
+
+    def Update(self, key):
+        """ Update the data item associated with 'key'. """
+        if self.Expired(key):
+            self.handle.AsyncRequest(key)
+
+    def UpdateBatch(self, keys):
+        """ Batch update of multiple keys. """
         for key in keys:
-            self.Get(key, timeout)
+            self.Update(key)
 
-    def Update(self, timeout=True):
-        """ Updates all expired state items via RPC queries.
-
-        If timeout=False, updates all state items. """
-
-        for key in self.keys:
-            if not timeout or HasExpired(self.keys[key]):
-                self.keys[key] = self.handle.Request(key)
+    def UpdateAll(self):
+        """ Updates all expired state items via RPC queries. """
+        self.UpdateBatch(self.Keys())
 
     def __init__(self, handle):
-        self.handle = handle
+        self.handle = handle        # Handle to BitcoinRPCHandle object
         self.keys = {}
+
+    #==========================================================================
+    # Raw dictionary operations in case the DB format changes later.
+    #==========================================================================
+
+    def _RawGet(self, key):
+        if key in self.keys:
+            return self.keys[key]
+        return False
+
+    def _RawPut(self, key, payload):
+        self.keys[key] = payload
+
+    def _RawKeys(self):
+        return self.keys.keys()
