@@ -23,6 +23,11 @@ class State():
 
         return self.keys[key]
 
+    def BatchGet(self, keys, timeout=True):
+        """ Batch get of multiple keys with State.Get(). """
+        for key in keys:
+            self.Get(key, timeout)
+
     def Update(self, timeout=True):
         """ Updates all expired state items via RPC queries.
 

@@ -31,15 +31,15 @@ if __name__ == '__main__':
 
     print("=== libbitcoind-api test ===\n")
 
-    state.Get('getnettotals')
-    state.Get('getmempoolinfo')
-    state.Get('getblockcount')
-    state.Get('getbestblockhash')
+    watchlist = ['getblockchaininfo', 'getmempoolinfo', 'getmininginfo',
+                    'getnetworkinfo', 'getnettotals', 'getconnectioncount',
+                    'getwalletinfo']
+    state.BatchGet(watchlist)
 
     import time
     while 1:
-        state.Update()
+        state.Update(False)
         for key in state.Keys():
             print(key, state.Get(key))
         print()
-        time.sleep(2)
+        time.sleep(1)
